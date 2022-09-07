@@ -11,6 +11,16 @@ local wastingFuel = false
 local usingCan = false
 local nearTank = false
 
+-- Electric Vehicle Charging
+local plugDropped = false
+local holdingPlug = false
+local plugInVehicle = false
+local plug
+local rope
+local vehicleFueling
+local usedCharger
+local chargerCoords
+
 -- Nozzle Z position based on vehicle class.
 local nozzleBasedOnClass = {
     0.65, -- Compacts
@@ -71,6 +81,18 @@ function nearPump(coords)
         if entity ~= 0 then break end
     end
     if config.pumpModels[GetEntityModel(entity)] then
+        return GetEntityCoords(entity), entity
+    end
+end
+
+-- returns charger position if a player is near it.
+function nearCharger(coords)
+    local entity = nil
+    for hash in pairs(config.chargerModels) do
+        entity = GetClosestObjectOfType(coords.x, coords.y, coords.z, 0.8, hash, true, true, true)
+        if entity ~= 0 then break end
+    end
+    if config.chargerModels[GetEntityModel(entity)] then
         return GetEntityCoords(entity), entity
     end
 end
@@ -158,12 +180,61 @@ function grabNozzleFromPump()
     })
 end
 
+-- Create plug, cable and attach them to the player.
+function grabPlugFromCharger()
+    LoadAnimDict("anim@am_hold_up@male")
+    TaskPlayAnim(ped, "anim@am_hold_up@male", "shoplift_high", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
+    Wait(300)
+    plug = CreateObject(`prop_tool_drill`, 0, 0, 0, true, true, true)
+    AttachEntityToEntity(plug, ped, GetPedBoneIndex(ped, 0x49D9), 0.11, 0.02, 0.02, -80.0, 180.0, 15.0, true, true, false, true, 1, true)
+    RopeLoadTextures()
+    while not RopeAreTexturesLoaded() do
+        Wait(0)
+    end
+    RopeLoadTextures()
+    while not charger do
+        Wait(0)
+    end
+    rope = AddRope(charger.x, charger.y, charger.z, 0.0, 0.0, 0.0, 3.0, 1, 1000.0, 0.0, 1.0, false, false, false, 1.0, true)
+    while not rope do
+        Wait(0)
+    end
+    ActivatePhysics(rope)
+    Wait(50)
+    local plugPos = GetEntityCoords(plug)
+    plugPos = GetOffsetFromEntityInWorldCoords(plug, 0.0, -0.033, -0.195)
+    AttachEntitiesToRope(rope, chargerHandle, plug, charger.x, charger.y, charger.z + 2.05, plugPos.x, plugPos.y, plugPos.z, 5.0, false, false, nil, nil)
+    plugDropped = false
+    holdingPlug = true
+    plugInVehicle = false
+    vehicleFueling = false
+    usedCharger = chargerHandle
+    SendNUIMessage({
+        type = "status",
+        status = true
+    })
+    SendNUIMessage({
+        type = "update",
+        fuelCost = "0.00",
+        fuelTank = "0.00"
+    })
+end
+
 -- attach the nozzle to the player.
 function grabExistingNozzle()
     AttachEntityToEntity(nozzle, ped, GetPedBoneIndex(ped, 0x49D9), 0.11, 0.02, 0.02, -80.0, -90.0, 15.0, true, true, false, true, 1, true)
     nozzleDropped = false
     holdingNozzle = true
     nozzleInVehicle = false
+    vehicleFueling = false
+end
+
+-- attach the plug to the player.
+function grabExistingPlug()
+    AttachEntityToEntity(plug, ped, GetPedBoneIndex(ped, 0x49D9), 0.11, 0.02, 0.02, -80.0, -90.0, 15.0, true, true, false, true, 1, true)
+    plugDropped = false
+    holdingPlug = true
+    plugInVehicle = false
     vehicleFueling = false
 end
 
@@ -184,12 +255,42 @@ function putNozzleInVehicle(vehicle, ptankBone, isBike, dontClear, newTankPositi
     vehicleFueling = vehicle
 end
 
+-- attach plug to vehicle.
+function putPlugInVehicle(vehicle, ptankBone, isBike, dontClear, newTankPosition)
+    if isBike then
+        AttachEntityToEntity(plug, vehicle, ptankBone, 0.0 + newTankPosition.x, -0.1 + newTankPosition.y, 0.4 + newTankPosition.z, -90.0, -90.0, 0.0, true, true, false, false, 1, true)
+    else
+        AttachEntityToEntity(plug, vehicle, ptankBone, -0.18 + newTankPosition.x, 0.0 + newTankPosition.y, 0.75 + newTankPosition.z, -180.0, -120.0, 0.0, true, true, false, false, 1, true)
+    end
+    if not dontClear and IsEntityPlayingAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 3) then
+        ClearPedTasks(ped)
+    end
+    plugDropped = false
+    holdingPlug = false
+    plugInVehicle = true
+    wastingFuel = false
+    vehicleFueling = vehicle
+end
+
 -- detach nozzle from everything and hide ui.
 function dropNozzle()
     DetachEntity(nozzle, true, true)
     nozzleDropped = true
     holdingNozzle = false
     nozzleInVehicle = false
+    vehicleFueling = false
+    SendNUIMessage({
+        type = "status",
+        status = false
+    })
+end
+
+-- detach plug from everything and hide ui.
+function dropPlug()
+    DetachEntity(plug, true, true)
+    plugDropped = true
+    holdingPlug = false
+    plugInVehicle = false
     vehicleFueling = false
     SendNUIMessage({
         type = "status",
@@ -212,12 +313,28 @@ function returnNozzleToPump()
     })
 end
 
+-- delete nozzle and rope, and hide ui.
+function returnPlugToCharger()
+    DeleteEntity(plug)
+    RopeUnloadTextures()
+    DeleteRope(rope)
+    plugDropped = false
+    holdingPlug = false
+    plugInVehicle = false
+    vehicleFueling = false
+    SendNUIMessage({
+        type = "status",
+        status = false
+    })
+end
+
 -- Get important information.
 CreateThread(function()
     while true do
         ped = PlayerPedId()
         pedCoords = GetEntityCoords(ped)
         pump, pumpHandle = nearPump(pedCoords)
+        charger, chargerHandle = nearCharger(pedCoords)
         veh = GetVehiclePedIsIn(ped, true)
         Wait(500)
     end
@@ -365,6 +482,26 @@ CreateThread(function()
                     ClearPedTasks(ped)
                 end
             end
+        elseif charger then
+            wait = 0
+            if not holdingPlug and not plugInVehicle and not plugDropped then
+                DrawHelp("Press ~INPUT_PICKUP~ to grab Charging Plug")
+                if IsControlJustPressed(0, 51) then
+                    grabPlugFromCharger()
+                    Wait(1000)
+                    ClearPedTasks(ped)
+                end
+            elseif holdingPlug and not nearTank and chargerHandle == usedCharger then
+                DrawHelp("Press ~INPUT_PICKUP~ to return Charging Plug")
+                if IsControlJustPressed(0, 51) then
+                    LoadAnimDict("anim@am_hold_up@male")
+                    TaskPlayAnim(ped, "anim@am_hold_up@male", "shoplift_high", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
+                    Wait(300)
+                    returnPlugToCharger()
+                    Wait(1000)
+                    ClearPedTasks(ped)
+                end
+            end 
         else
             wait = 500
         end
@@ -524,6 +661,159 @@ CreateThread(function()
     end
 end)
 
+-- Attaching and taking the nozzle form the vehicle, and dropping the nozzle form the player or vehicle.
+CreateThread(function()
+    local wait = 500
+    while true do
+        Wait(wait)
+        if holdingPlug or plugInVehicle or plugDropped then
+            wait = 0
+
+            -- drop the nozzle and remove it if it's far away from the charger.
+            if charger then
+                chargerCoords = GetEntityCoords(usedCharger)
+            end
+            if plug and chargerCoords then
+                plugLocation = GetEntityCoords(plug)
+                if #(chargerCoords - pedCoords) < 3.0 then
+                    SendNUIMessage({
+                        type = "status",
+                        status = true
+                    })
+                else
+                    SendNUIMessage({
+                        type = "status",
+                        status = false
+                    })
+                end
+                if #(plugLocation - chargerCoords) > 6.0 then
+                    dropPlug()
+                elseif #(chargerCoords - pedCoords) > 100.0 then
+                    returnPlugToPump()
+                end
+                if plugDropped and #(plugLocation - pedCoords) < 1.5 then
+                    DrawHelp("Press ~INPUT_PICKUP~ to grab Dropped Charger Plug")
+                    if IsControlJustPressed(0, 51) then
+                        LoadAnimDict("anim@mp_snowball")
+                        TaskPlayAnim(ped, "anim@mp_snowball", "pickup_snowball", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
+                        Wait(700)
+                        grabExistingPlug()
+                        ClearPedTasks(ped)
+                    end
+                end
+            end
+
+            local veh = vehicleInFront()
+
+            -- Animations for manually fueling and effect for sparying fuel.
+            if holdingPlug and plug then
+                DisableControlAction(0, 25, true)
+                DisableControlAction(0, 24, true)
+                if IsDisabledControlPressed(0, 24) then
+                    if veh and tankPosition and #(pedCoords - tankPosition) < 1.2 then
+                        if not IsEntityPlayingAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 3) then
+                            LoadAnimDict("timetable@gardener@filling_can")
+                            TaskPlayAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
+                        end
+                        wastingFuel = false
+                        vehicleFueling = veh
+                    else
+                        if IsEntityPlayingAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 3) then
+                            vehicleFueling = false
+                            ClearPedTasks(ped)
+                        end
+                        --if nozzleLocation then
+                        --    wastingFuel = true
+                        --    PlayEffect("core", "veh_trailer_petrol_spray")
+                        --end
+                    end
+                else
+                    if IsEntityPlayingAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 3) then
+                        vehicleFueling = false
+                        ClearPedTasks(ped)
+                    end
+                    wastingFuel = false
+                end
+            end
+
+            -- attaching and taking the nozzle from the vehicle.
+            if veh then
+                local vehClass = GetVehicleClass(veh)
+                local vehModel = GetLabelText(GetDisplayNameFromVehicleModel(GetEntityModel(veh)))
+                local zPos = nozzleBasedOnClass[vehClass + 1]
+                local isBike = false
+                local plugModifiedPosition = {
+                    x = 0.0,
+                    y = 0.0,
+                    z = 0.0
+                }
+                local textModifiedPosition = {
+                    x = 0.0,
+                    y = 0.0,
+                    z = 0.0
+                }
+                
+                if vehClass == 8 and vehClass ~= 13 and config.electricVehicles[GetEntityModel(veh)] then
+                    tankBone = GetEntityBoneIndexByName(veh, "petrolcap")
+                    if tankBone == -1 then
+                        tankBone = GetEntityBoneIndexByName(veh, "petroltank")
+                    end
+                    if tankBone == -1 then
+                        tankBone = GetEntityBoneIndexByName(veh, "engine")
+                    end
+                    isBike = true
+                elseif vehClass ~= 13 and config.electricVehicles[GetEntityModel(veh)] then
+                    tankBone = GetEntityBoneIndexByName(veh, "petrolcap")
+                    if tankBone == -1 then
+                        tankBone = GetEntityBoneIndexByName(veh, "petroltank_l")
+                    end
+                    if tankBone == -1 then
+                        tankBone = GetEntityBoneIndexByName(veh, "hub_lr")
+                    end
+                    if tankBone == -1 then
+                        tankBone = GetEntityBoneIndexByName(veh, "handle_dside_r")
+                        plugModifiedPosition.x = 0.1
+                        plugModifiedPosition.y = -0.5
+                        plugModifiedPosition.z = -0.6
+                        textModifiedPosition.x = 0.55
+                        textModifiedPosition.y = 0.1
+                        textModifiedPosition.z = -0.2
+                    end
+                end
+                tankPosition = GetWorldPositionOfEntityBone(veh, tankBone)
+                if tankPosition and #(pedCoords - tankPosition) < 1.2 then
+                    if not plugInVehicle and holdingPlug then
+                        nearTank = true
+                        DrawHelp("Press ~INPUT_PICKUP~ to attach Charger Plug to the " .. vehModel)
+                        if IsControlJustPressed(0, 51) then
+                            LoadAnimDict("timetable@gardener@filling_can")
+                            TaskPlayAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
+                            Wait(300)
+                            putPlugInVehicle(veh, tankBone, isBike, true, plugModifiedPosition)
+                            Wait(300)
+                            ClearPedTasks(ped)
+                        end
+                    elseif plugInVehicle then
+                        DrawHelp("Press ~INPUT_PICKUP~ to remove Charger Plug from the " .. vehModel)
+                        if IsControlJustPressed(0, 51) then
+                            LoadAnimDict("timetable@gardener@filling_can")
+                            TaskPlayAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
+                            Wait(300)
+                            grabExistingPlug()
+                            Wait(300)
+                            ClearPedTasks(ped)
+                        end
+                    end 
+                end
+            else
+                nearTank = false
+            end
+        else
+            wait = 500
+        end
+    end
+end)
+
 -- refueling using jerry can.
 CreateThread(function()
     local wait = 500
@@ -596,11 +886,26 @@ CreateThread(function()
         local blip = AddBlipForCoord(coords)
         SetBlipSprite(blip, 361)
         SetBlipScale(blip, 0.6)
-        SetBlipColour(blip, 4)
+        SetBlipColour(blip, 17)
         SetBlipDisplay(blip, 4)
         SetBlipAsShortRange(blip, true)
         BeginTextCommandSetBlipName("STRING")
         AddTextComponentString("Gas Station")
+        EndTextCommandSetBlipName(blip)
+    end
+end)
+
+-- Create blips for each electric charger location.
+CreateThread(function()
+    for _, coords in pairs(config.chargerBlipLocations) do
+        local blip = AddBlipForCoord(coords)
+        SetBlipSprite(blip, 361)
+        SetBlipScale(blip, 0.6)
+        SetBlipColour(blip, 26)
+        SetBlipDisplay(blip, 4)
+        SetBlipAsShortRange(blip, true)
+        BeginTextCommandSetBlipName("STRING")
+        AddTextComponentString("Electric Charger")
         EndTextCommandSetBlipName(blip)
     end
 end)
