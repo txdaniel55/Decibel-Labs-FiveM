@@ -447,7 +447,7 @@ CreateThread(function()
                     price = math.floor(config.jerryCanrefillCost - (config.jerryCanrefillCost / (4500 / ammo)))
                     jerryCanText = " \nPress ~INPUT_DETONATE~ to refill Jerry Can [" .. math.floor((ammo/4500)*100) .. "%]"
                 end
-                DrawHelp("Press ~INPUT_PICKUP~ to grab Fuel Nozzle" .. jerryCanText)
+                DrawHelp("Press ~INPUT_PICKUP~ to grab the Fuel Nozzle" .. jerryCanText)
                 if IsControlJustPressed(0, 51) then
                     grabNozzleFromPump()
                     Wait(1000)
@@ -472,7 +472,7 @@ CreateThread(function()
                     end
                 end
             elseif holdingNozzle and not nearTank and pumpHandle == usedPump then
-                DrawHelp("Press ~INPUT_PICKUP~ to return Fuel Nozzle")
+                DrawHelp("Press ~INPUT_PICKUP~ to return the Fuel Nozzle")
                 if IsControlJustPressed(0, 51) then
                     LoadAnimDict("anim@am_hold_up@male")
                     TaskPlayAnim(ped, "anim@am_hold_up@male", "shoplift_high", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
@@ -485,14 +485,14 @@ CreateThread(function()
         elseif charger then
             wait = 0
             if not holdingPlug and not plugInVehicle and not plugDropped then
-                DrawHelp("Press ~INPUT_PICKUP~ to grab Charging Plug")
+                DrawHelp("Press ~INPUT_PICKUP~ to grab the Charging Plug")
                 if IsControlJustPressed(0, 51) then
                     grabPlugFromCharger()
                     Wait(1000)
                     ClearPedTasks(ped)
                 end
             elseif holdingPlug and not nearTank and chargerHandle == usedCharger then
-                DrawHelp("Press ~INPUT_PICKUP~ to return Charging Plug")
+                DrawHelp("Press ~INPUT_PICKUP~ to return the Charging Plug")
                 if IsControlJustPressed(0, 51) then
                     LoadAnimDict("anim@am_hold_up@male")
                     TaskPlayAnim(ped, "anim@am_hold_up@male", "shoplift_high", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
@@ -539,7 +539,7 @@ CreateThread(function()
                     returnNozzleToPump()
                 end
                 if nozzleDropped and #(nozzleLocation - pedCoords) < 1.5 then
-                    DrawHelp("Press ~INPUT_PICKUP~ to grab Dropped Fuel Nozzle")
+                    DrawHelp("Press ~INPUT_PICKUP~ to grab the Fuel Nozzle")
                     if IsControlJustPressed(0, 51) then
                         LoadAnimDict("anim@mp_snowball")
                         TaskPlayAnim(ped, "anim@mp_snowball", "pickup_snowball", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
@@ -631,7 +631,7 @@ CreateThread(function()
                 if tankPosition and #(pedCoords - tankPosition) < 1.2 then
                     if not nozzleInVehicle and holdingNozzle then
                         nearTank = true
-                        DrawHelp("Press ~INPUT_PICKUP~ to attach Fuel Nozzle to the " .. vehModel)
+                        DrawHelp("Press ~INPUT_PICKUP~ to attach the Fuel Nozzle to the " .. vehModel)
                         if IsControlJustPressed(0, 51) then
                             LoadAnimDict("timetable@gardener@filling_can")
                             TaskPlayAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
@@ -641,7 +641,7 @@ CreateThread(function()
                             ClearPedTasks(ped)
                         end
                     elseif nozzleInVehicle then
-                        DrawHelp("Press ~INPUT_PICKUP~ to remove Fuel Nozzle from the " .. vehModel)
+                        DrawHelp("Press ~INPUT_PICKUP~ to remove the Fuel Nozzle from the " .. vehModel)
                         if IsControlJustPressed(0, 51) then
                             LoadAnimDict("timetable@gardener@filling_can")
                             TaskPlayAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
@@ -692,7 +692,7 @@ CreateThread(function()
                     returnPlugToPump()
                 end
                 if plugDropped and #(plugLocation - pedCoords) < 1.5 then
-                    DrawHelp("Press ~INPUT_PICKUP~ to grab Dropped Charger Plug")
+                    DrawHelp("Press ~INPUT_PICKUP~ to grab the Charger Plug")
                     if IsControlJustPressed(0, 51) then
                         LoadAnimDict("anim@mp_snowball")
                         TaskPlayAnim(ped, "anim@mp_snowball", "pickup_snowball", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
@@ -784,7 +784,7 @@ CreateThread(function()
                 if tankPosition and #(pedCoords - tankPosition) < 1.2 then
                     if not plugInVehicle and holdingPlug then
                         nearTank = true
-                        DrawHelp("Press ~INPUT_PICKUP~ to attach Charger Plug to the " .. vehModel)
+                        DrawHelp("Press ~INPUT_PICKUP~ to attach the Charger Plug to the " .. vehModel)
                         if IsControlJustPressed(0, 51) then
                             LoadAnimDict("timetable@gardener@filling_can")
                             TaskPlayAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
@@ -794,7 +794,7 @@ CreateThread(function()
                             ClearPedTasks(ped)
                         end
                     elseif plugInVehicle then
-                        DrawHelp("Press ~INPUT_PICKUP~ to remove Charger Plug from the " .. vehModel)
+                        DrawHelp("Press ~INPUT_PICKUP~ to remove the Charger Plug from the " .. vehModel)
                         if IsControlJustPressed(0, 51) then
                             LoadAnimDict("timetable@gardener@filling_can")
                             TaskPlayAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 2.0, 8.0, -1, 50, 0, 0, 0, 0)
@@ -854,7 +854,7 @@ CreateThread(function()
                     if math.floor(fuel) == 100 then
                         DrawHelp("The " .. vehModel .. " has a full tank of gas.")
                     else
-                        DrawHelp("Press ~INPUT_PICKUP~ to refuel the " .. vehModel .. " with Jerry Can\nVehicle: [" .. math.floor(fuel) .. "%]\nJerry Can: [" .. math.floor((ammo/4500)*100) .. "%]")
+                        DrawHelp("Press ~INPUT_PICKUP~ to refuel the " .. vehModel .. " from the Jerry Can\nVehicle: [" .. math.floor(fuel) .. "%]\nJerry Can: [" .. math.floor((ammo/4500)*100) .. "%]")
                     end
                     if IsControlPressed(0, 51) and ammo > 0 and fuel < 100 then
                         if not IsEntityPlayingAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 3) then
