@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/txData/default/data
+/txData/CFXDefault_17E4A2.base/cache

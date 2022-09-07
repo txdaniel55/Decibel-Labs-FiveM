@@ -1,0 +1,21 @@
+[
+  {
+    "name": "txdaniel55",
+    "master": true,
+    "password_hash": "$2a$11$iT2xXWsfz9gLt6/lutK8r.9Vb2UoR4XC7I.xPRl5EyZZQgSlmMCCG",
+    "providers": {
+      "citizenfx": {
+        "id": "txdaniel55",
+        "identifier": "fivem:1587476",
+        "data": {
+          "sub": "b51ea1916ba96a048829de0bba9a28c5",
+          "nameid": "https://forum.cfx.re/internal/user/1587476",
+          "name": "txdaniel55",
+          "picture": "https://avatars.discourse.org/v4/letter/t/7933a0/256.png",
+          "profile": "https://forum.cfx.re/u/txdaniel55"
+        }
+      }
+    },
+    "permissions": []
+  }
+]
