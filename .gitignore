@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /txData/default/data
 /txData/CFXDefault_17E4A2.base/cache
+/txData/CFXDefault_17E4A2.base/db/default
