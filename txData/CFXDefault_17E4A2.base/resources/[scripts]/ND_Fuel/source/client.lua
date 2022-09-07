@@ -463,7 +463,7 @@ CreateThread(function()
                     z = 0.0
                 }
                 
-                if vehClass == 8 and vehClass ~= 13 and not config.electricVehicles[GetHashKey(veh)] then
+                if vehClass == 8 and vehClass ~= 13 and not config.electricVehicles[GetEntityModel(veh)] then
                     tankBone = GetEntityBoneIndexByName(veh, "petrolcap")
                     if tankBone == -1 then
                         tankBone = GetEntityBoneIndexByName(veh, "petroltank")
@@ -472,7 +472,7 @@ CreateThread(function()
                         tankBone = GetEntityBoneIndexByName(veh, "engine")
                     end
                     isBike = true
-                elseif vehClass ~= 13 and not config.electricVehicles[GetHashKey(veh)] then
+                elseif vehClass ~= 13 and not config.electricVehicles[GetEntityModel(veh)] then
                     tankBone = GetEntityBoneIndexByName(veh, "petrolcap")
                     if tankBone == -1 then
                         tankBone = GetEntityBoneIndexByName(veh, "petroltank_l")
@@ -539,19 +539,19 @@ CreateThread(function()
                 local can = GetAmmoInPedWeapon(ped, 883325847)
                 local distance = 1.2
                 
-                if vehClass == 8 and vehClass ~= 13 and not config.electricVehicles[GetHashKey(veh)] then
+                if vehClass == 8 and vehClass ~= 13 and not config.electricVehicles[GetEntityModel(veh)] then
                     tankBone = GetEntityBoneIndexByName(veh, "petroltank")
                     if tankBone == -1 then
                         tankBone = GetEntityBoneIndexByName(veh, "engine")
                     end
-                elseif vehClass == 14 and not config.electricVehicles[GetHashKey(veh)] then
+                elseif vehClass == 14 and not config.electricVehicles[GetEntityModel(veh)] then
                     tankBone = GetEntityBoneIndexByName(veh, "engine")
                     if tankBone == -1 then
                         tankBone = GetEntityBoneIndexByName(veh, "bodyshell")
                     else
                         distance = 2.0
                     end
-                elseif vehClass ~= 13 and not config.electricVehicles[GetHashKey(veh)] then
+                elseif vehClass ~= 13 and not config.electricVehicles[GetEntityModel(veh)] then
                     tankBone = GetEntityBoneIndexByName(veh, "petroltank_l")
                     if tankBone == -1 then
                         tankBone = GetEntityBoneIndexByName(veh, "hub_lr")
