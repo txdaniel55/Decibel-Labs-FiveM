@@ -91,15 +91,15 @@ config = {
     },
 
     chargerBlipLocations = {
-        vector3(908.03, -14.29, 78.76)
+        vector3(282.59, -334.26, 44.92)
     },
 
     chargerModels = {
-        [-2057063838] = true, --TeslaSuperCharger
+        [-2057063838] = true, -- ItzNikos_TeslaSupercharger
     },
 
     -- you can spawn pump here. Search up gta objects and then search pump.
     addPumps = {
-        {hash = "ItzNikos_TeslaSupercharger", x = 908.03, y = -14.29, z = 78.76},
+        --{hash = "ItzNikos_TeslaSupercharger", x = 279.03, y = -337.29, z = 45.76},
     }
 }

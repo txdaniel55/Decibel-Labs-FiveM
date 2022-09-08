@@ -21,6 +21,8 @@ local vehicleFueling
 local usedCharger
 local chargerCoords
 
+print(GetEntityModel("ItzNikos_TeslaSupercharger"))
+
 -- Nozzle Z position based on vehicle class.
 local nozzleBasedOnClass = {
     0.65, -- Compacts
@@ -905,7 +907,7 @@ CreateThread(function()
         SetBlipDisplay(blip, 4)
         SetBlipAsShortRange(blip, true)
         BeginTextCommandSetBlipName("STRING")
-        AddTextComponentString("Electric Charger")
+        AddTextComponentString("Supercharger Station")
         EndTextCommandSetBlipName(blip)
     end
 end)
